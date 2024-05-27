@@ -1,0 +1,102 @@
+services:
+    dblocations:
+        image: postgres
+        container_name: dblocations
+        restart: always
+        user: postgres
+        secrets:
+            - db-password
+        volumes:
+            - db-data:/var/lib/postgresql/data
+        env_file:
+            - .env
+        expose:
+            - 5432
+        healthcheck:
+            test: ["CMD", "pg_isready"]
+            interval: 1s
+            timeout: 5s
+            retries: 10
+        networks:
+            - net
+
+    #pgadmin:
+    #    image: dpage/pgadmin4
+    #    container_name: pgadmin
+    #    restart: always
+    #    ports:
+    #        - 8888:80
+    #    environment:
+    #        PGADMIN_DEFAULT_EMAIL: user-name@domain-name.com
+    #        PGADMIN_DEFAULT_PASSWORD: strong-password
+    #    volumes:
+    #        - pgadmin-data:/var/lib/pgadmin
+    #    networks:
+    #        - net
+    
+    dbflows:
+        image: neo4j:latest
+        container_name: dbflows
+        restart: on-failure
+        ports:
+            - 7474:7474
+            - 7687:7687
+        env_file:
+            - .env
+        #environment:
+        #    - NEO4J_AUTH=neo4j/password
+        #    - NEO4J_apoc_export_file_enabled=true
+        #    - NEO4J_apoc_import_file_enabled=true
+        #    - NEO4J_apoc_import_file_use__neo4j__config=true
+        #    - NEO4J_PLUGINS=["apoc", "graph-data-science"]
+        volumes:
+            - neo4j_data:/data
+            - neo4j_logs:/logs
+            - neo4j_import:/var/lib/neo4j/import
+            - neo4j_plugins:/plugins
+        networks:
+            - net
+        healthcheck:
+            test: wget http://localhost:7474 || exit 1
+            interval: 1s
+            timeout: 5s
+            retries: 20
+            start_period: 90s
+     
+    webapp:
+        build: ./nta_app
+        container_name: webapp
+        ports: 
+            - 8889:8080
+        env_file:
+            - .env
+        #environment:
+        #    - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+        depends_on:
+            dblocations:
+                condition: service_healthy
+            dbflows:
+                condition: service_healthy
+        networks:
+            - net
+        secrets:
+            - db-password
+        volumes:
+            - /tmp/.X11-unix/:/tmp/.X11-unix/
+            - neo4j_import:/app/db_insert
+
+networks:
+    net:
+        driver: bridge
+
+volumes:
+    db-data:
+    pgadmin-data:
+    neo4j_data:
+    neo4j_logs:
+    neo4j_import:
+    neo4j_plugins:
+    
+secrets:
+    db-password:
+        file: nta_app/password.txt

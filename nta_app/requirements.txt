@@ -1,0 +1,6 @@
+nicegui
+psycopg2
+pandas
+neo4j
+aiopg
+asyncpg
