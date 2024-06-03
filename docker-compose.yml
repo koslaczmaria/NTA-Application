@@ -19,20 +19,6 @@ services:
             retries: 10
         networks:
             - net
-
-    #pgadmin:
-    #    image: dpage/pgadmin4
-    #    container_name: pgadmin
-    #    restart: always
-    #    ports:
-    #        - 8888:80
-    #    environment:
-    #        PGADMIN_DEFAULT_EMAIL: user-name@domain-name.com
-    #        PGADMIN_DEFAULT_PASSWORD: strong-password
-    #    volumes:
-    #        - pgadmin-data:/var/lib/pgadmin
-    #    networks:
-    #        - net
     
     dbflows:
         image: neo4j:latest
@@ -43,12 +29,6 @@ services:
             - 7687:7687
         env_file:
             - .env
-        #environment:
-        #    - NEO4J_AUTH=neo4j/password
-        #    - NEO4J_apoc_export_file_enabled=true
-        #    - NEO4J_apoc_import_file_enabled=true
-        #    - NEO4J_apoc_import_file_use__neo4j__config=true
-        #    - NEO4J_PLUGINS=["apoc", "graph-data-science"]
         volumes:
             - neo4j_data:/data
             - neo4j_logs:/logs
@@ -70,8 +50,6 @@ services:
             - 8889:8080
         env_file:
             - .env
-        #environment:
-        #    - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
         depends_on:
             dblocations:
                 condition: service_healthy
